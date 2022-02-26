@@ -10,10 +10,9 @@
 - AI 허브의 단발성 대화데이터셋과 네이버 뉴스/유튜브 댓글을 크롤링하여 데이터셋을 구성하였습니다.
 - 모델은 KcBert를 이용하였고, 입력된 텍스트를 슬픔/기쁨/놀람/두려움/역겨움/분노 6가지 감정으로 구분합니다.
 
-@inproceedings{lee2020kcbert,
-  title={KcBERT: Korean Comments BERT},
-  author={Lee, Junbum},
-  booktitle={Proceedings of the 32nd Annual Conference on Human and Cognitive Language Technology},
-  pages={437--440},
-  year={2020}
-}
+
+## 2. 이미지 감정분석 - Image_Sentimental_Analysis
+- 사진에 있는 얼굴 표정을 기준으로 사진의 감정을 분석합니다.
+- 학습데이터는 fer-2013 데이터셋을 이용히였습니다. (캐글에서 쉽게 다운받을 수 있습니다.)
+- 구글링을 통해 많이 사용하는 짤을 크롤링하였습니다.
+> 이때
