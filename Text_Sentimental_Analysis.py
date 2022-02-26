@@ -250,10 +250,3 @@ def classify_sentence(sentence):
 new_sentence = "올해도 좋은일만 가득하길!"
 classify_sentence(new_sentence)
 
-@inproceedings{lee2020kcbert,
-  title={KcBERT: Korean Comments BERT},
-  author={Lee, Junbum},
-  booktitle={Proceedings of the 32nd Annual Conference on Human and Cognitive Language Technology},
-  pages={437--440},
-  year={2020}
-}
