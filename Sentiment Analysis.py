@@ -188,5 +188,5 @@ history_2 = model_2.fit(train_generator,
                          callbacks=[reduce_lr])
 
 
-model_2.save('Resnet_3.h5')
+model_2.save('VGG16.h5')
 
