@@ -1,39 +1,19 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[ ]:
-
-
-get_ipython().system(' pip install graphviz')
-
-
-# # Sentimental Analysis
-
-# In[ ]:
-
 
 import os
 import tensorflow.compat.v2 as tf 
-
-from tensorflow.keras.applications.inception_v3 import InceptionV3
-
-
-# In[ ]:
-
-
 tf.enable_v2_behavior()
-
-
-# In[ ]:
-
-
 from tensorflow.python.framework.ops import disable_eager_execution 
 disable_eager_execution()
+#This code is for using tensorflow on M1 Mac
+#If your device is not M1 Mac, just import tensorflow as usual
 
+import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
 
-# In[ ]:
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.callbacks import ReduceLROnPlateau
 
-
+#Setting directory
 base_dir = './'
 
 train_dir = os.path.join(base_dir, 'train')
@@ -52,54 +32,7 @@ test_sad = os.path.join(test_dir,'sad')
 test_surprised = os.path.join(test_dir,'surprised')
 test_happy = os.path.join(test_dir,'happy')
 
-
-# In[ ]:
-
-
-import matplotlib.image as mpimg
-import matplotlib.pyplot as plt
-
-# Parameters for our graph; we'll output images in a 4x4 configuration
-nrows = 4
-ncols = 4
-
-pic_index = 0 # Index for iterating over images
-
-
-# In[ ]:
-
-
-train_angry_fnames = os.listdir( train_angry )
-train_happy_fnames = os.listdir( train_happy )
-
-fig = plt.gcf()
-fig.set_size_inches(ncols*4, nrows*4)
-
-pic_index+=8
-
-next_angry_pix = [os.path.join(train_angry, fname) 
-                for fname in train_angry_fnames[ pic_index-8:pic_index] 
-               ]
-
-next_happy_pix = [os.path.join(train_happy, fname) 
-                for fname in train_happy_fnames[ pic_index-8:pic_index]
-               ]
-
-for i, img_path in enumerate(next_angry_pix+next_happy_pix):
-    sp = plt.subplot(nrows, ncols, i + 1)
-    sp.axis('Off') 
-
-    img = mpimg.imread(img_path)
-    plt.imshow(img,cmap='gray')
-
-plt.show()
-
-
-# In[ ]:
-
-
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-
+#Dataset Generator
 train_datagen = ImageDataGenerator(rescale = 1/255.0,
                                   horizontal_flip=True)
 
@@ -120,24 +53,15 @@ test_generator = test_datagen.flow_from_directory(test_dir,
                                                  shuffle = False)
 
 
-# In[ ]:
 
 
-# callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5)
 
 
-# In[ ]:
 
-
-from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 reduce_lr = ReduceLROnPlateau(monitor='val_loss' , factor=0.25, patience=2, min_lr=0.00001,model='auto')
 
 
-# ## CNN
-
-# In[ ]:
-
-
+#CNN
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.layers import Input
 from tensorflow.keras import layers
@@ -196,35 +120,12 @@ model.compile(optimizer=Adam(learning_rate=0.0005),
               metrics = ['accuracy',Precision(), Recall()])
 
 
-# In[ ]:
-
-
-model.summary()
-
-
-# In[ ]:
-
-
-tf.keras.utils.plot_model(
-    model, to_file='model.png', show_shapes=False, show_dtype=False,
-    show_layer_names=True, rankdir='TB', expand_nested=False, dpi=96,
-    layer_range=None, show_layer_activations=False
-)
-
-
-# In[ ]:
-
 
 history = model.fit(train_generator,
                     validation_data=test_generator,
-#                     steps_per_epoch=100,
                     epochs=100,
-#                     validation_steps=50,
                     verbose=1,
                     callbacks=[reduce_lr])
-
-
-# In[ ]:
 
 
 acc      = history.history[ 'accuracy' ]
@@ -244,16 +145,10 @@ plt.plot  ( epochs, val_loss )
 plt.title ('Training and validation loss'   )
 
 
-# In[ ]:
+model.save('CNN.h5')
 
 
-model.save('CNN_7.h5')
-
-
-# ## ResNet
-
-# In[ ]:
-
+#Pretrained_Model : VGG16
 
 from tensorflow.keras.optimizers import Adam,SGD
 from tensorflow.keras.layers import Input
@@ -263,38 +158,16 @@ from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dropout, Dense, Flatte
 from tensorflow.keras.metrics import Precision, Recall
 
 
-# In[ ]:
-
-
-resnet = tf.keras.applications.resnet50.ResNet50(weights='imagenet',include_top= False, 
-                                                input_shape=(48,48,3)) 
-
 vgg16 = tf.keras.applications.vgg16.VGG16(weights=None,include_top=False,
                                              input_shape=(48,48,3))
 
-vgg19 = tf.keras.applications.vgg19.VGG19(weights='imagenet',include_top=False,
-                                             input_shape=(48,48,3))
-
-
-# In[ ]:
-
-
-for layer in resnet.layers:
-    layer.trainable = False
 
 for layer in vgg16.layers:
     layer.trainable = False
     
-for layer in vgg19.layers:
-    layer.trainable = False
-
-
-# In[ ]:
-
 
 input_tensor = Input(shape=(48,48,1))
-x = layers.Conv2D(3,(1,1),padding='same')(input_tensor)
-# x = resnet(x) 
+x = layers.Conv2D(3,(1,1),padding='same')(input_tensor) 
 x = vgg16(x)
 x = layers.Flatten()(x)
 x = layers.Dense(512,activation='relu')(x)
@@ -306,17 +179,6 @@ model_2 = Model(inputs=input_tensor, outputs=out)
 model_2.compile(optimizer=Adam(learning_rate= 0.00005),
               loss = 'categorical_crossentropy',
               metrics = ['accuracy',Precision(), Recall()])
-#Precision : 예측한 것 중 실제로 맞은 것
-#Recall : 실제 참값 중 예측을 잘 한 것
-
-
-# In[ ]:
-
-
-model_2.summary()
-
-
-# In[ ]:
 
 
 history_2 = model_2.fit(train_generator,
@@ -324,9 +186,6 @@ history_2 = model_2.fit(train_generator,
                         epochs=50,
                         verbose=1,
                          callbacks=[reduce_lr])
-
-
-# In[ ]:
 
 
 model_2.save('Resnet_3.h5')
